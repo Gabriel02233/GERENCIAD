@@ -1,0 +1,85 @@
+const inquirer = require('inquirer');
+const chalk = require('chalk');
+const fs = require('fs');
+
+const filePath = './tasks.json';
+
+const loadTasks = () => {
+    try {
+        const dataBuffer = fs.readFileSync(filePath);
+        const dataJSON = dataBuffer.toString();
+        return JSON.parse(dataJSON);
+    } catch (e) {
+        return [];
+    }
+};
+
+const saveTasks = (tasks) => {
+    const dataJSON = JSON.stringify(tasks);
+    fs.writeFileSync(filePath, dataJSON);
+};
+
+const addTask = (task) => {
+    const tasks = loadTasks();
+    tasks.push({ task });
+    saveTasks(tasks);
+    console.log(chalk.green('Task added!'));
+};
+
+const listTasks = () => {
+    const tasks = loadTasks();
+    console.log(chalk.blue('Your tasks:'));
+    tasks.forEach((task, index) => {
+        console.log(${index + 1}. ${task.task});
+    });
+};
+
+const removeTask = (index) => {
+    const tasks = loadTasks();
+    if (index > 0 && index <= tasks.length) {
+        tasks.splice(index - 1, 1);
+        saveTasks(tasks);
+        console.log(chalk.red('Task removed!'));
+    } else {
+        console.log(chalk.red('Invalid task number!'));
+    }
+};
+
+const main = async () => {
+    const answers = await inquirer.prompt([
+        {
+            type: 'list',
+            name: 'action',
+            message: 'What would you like to do?',
+            choices: ['Add task', 'List tasks', 'Remove task', 'Exit'],
+        },
+    ]);
+
+    if (answers.action === 'Add task') {
+        const answer = await inquirer.prompt([
+            {
+                type: 'input',
+                name: 'task',
+                message: 'Enter the task:',
+            },
+        ]);
+        addTask(answer.task);
+    } else if (answers.action === 'List tasks') {
+        listTasks();
+    } else if (answers.action === 'Remove task') {
+        const answer = await inquirer.prompt([
+            {
+                type: 'input',
+                name: 'index',
+                message: 'Enter the task number to remove:',
+            },
+        ]);
+        removeTask(parseInt(answer.index));
+    } else {
+        return;
+    }
+
+    main();
+};
+
+main();
